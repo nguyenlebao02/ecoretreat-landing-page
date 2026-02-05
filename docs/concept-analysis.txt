@@ -1,0 +1,17 @@
+
+=== RESULTS ===
+
+Traceback (most recent call last):
+  File "C:\Users\DAICA\.claude\skills\ai-multimodal\scripts\gemini_batch_process.py", line 1185, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\DAICA\.claude\skills\ai-multimodal\scripts\gemini_batch_process.py", line 1173, in main
+    print_results(results, args.task)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DAICA\.claude\skills\ai-multimodal\scripts\gemini_batch_process.py", line 937, in print_results
+    print(f"[{file_name}]")
+    ~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DAICA\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1258.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u1ea0' in position 14: character maps to <undefined>

@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(dir:*)",
+      "Skill(ai-multimodal)",
+      "Bash(export:*)",
+      "Bash(~/.claude/skills/.venv/Scripts/python.exe:*)",
+      "WebFetch(domain:www.pkd-ecoretreat.com)",
+      "Bash(curl:*)",
+      "Bash(ls:*)",
+      "Bash(start:*)",
+      "Bash(python -m http.server:*)",
+      "Bash(python:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(gh:*)"
+    ]
+  }
+}
