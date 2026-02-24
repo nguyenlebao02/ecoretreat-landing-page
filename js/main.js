@@ -108,6 +108,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // FORM VALIDATION & SUBMISSION
     // ===========================
 
+    // ===========================
+    // CRM WEBHOOK CONFIG
+    // ===========================
+    // Admin: Tạo Data Source trên CRM với field mapping:
+    //   "fullname" → "name", "phone" → "phone", "need" → "notes"
+    const CRM_WEBHOOK_URL = 'https://legacy-homes-crm.vercel.app/api/webhooks/landing/08f67416-6404-4c0a-b533-e86d384a288b';
+
     const leadForm = document.getElementById('leadForm');
 
     if (leadForm) {
@@ -117,7 +124,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Get form values
             const fullname = document.getElementById('fullname').value.trim();
             const phone = document.getElementById('phone').value.trim();
-            const need = document.querySelector('input[name="need"]:checked').value;
+            const needEl = document.querySelector('input[name="need"]:checked');
+            const need = needEl ? needEl.value : '';
 
             // Basic validation
             if (!fullname || fullname.length < 3) {
@@ -132,14 +140,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Prepare data
-            const formData = {
+            // Prepare CRM payload (field names match CRM mapping)
+            const payload = {
                 fullname: fullname,
                 phone: phone,
-                need: need,
-                timestamp: new Date().toISOString(),
-                source: 'landing-page'
+                need: need
             };
+
+            // Append UTM params from localStorage if available
+            const storedUtm = localStorage.getItem('utm_data');
+            if (storedUtm) {
+                try {
+                    const utm = JSON.parse(storedUtm);
+                    if (utm.source) payload.utm_source = utm.source;
+                    if (utm.medium) payload.utm_medium = utm.medium;
+                    if (utm.campaign) payload.utm_campaign = utm.campaign;
+                } catch (err) { /* ignore parse errors */ }
+            }
 
             // Show loading state
             const submitBtn = leadForm.querySelector('.btn-submit');
@@ -147,58 +164,48 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtn.textContent = 'ĐANG GỬI...';
             submitBtn.disabled = true;
 
-            // Simulate API call (replace with actual API endpoint)
-            setTimeout(() => {
-                // Success
-                console.log('Form submitted:', formData);
-
-                showFormMessage('✅ Đăng ký thành công! Chúng tôi sẽ liên hệ với bạn trong vòng 24 giờ.', 'success');
-
-                // Reset form
-                leadForm.reset();
-
-                // Track event (Google Analytics)
-                if (typeof gtag !== 'undefined') {
-                    gtag('event', 'lead_submission', {
-                        'event_category': 'form',
-                        'event_label': 'register_form',
-                        'value': 1
-                    });
-                }
-
-                // Reset button
-                submitBtn.textContent = originalBtnText;
-                submitBtn.disabled = false;
-
-                // Redirect to thank you page (optional)
-                // window.location.href = '/thank-you.html';
-
-            }, 1500);
-
-            // TODO: Replace above setTimeout with actual API call
-            // Example:
-            /*
-            fetch('https://your-api-endpoint.com/leads', {
+            // Submit to CRM webhook
+            fetch(CRM_WEBHOOK_URL, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
             })
-            .then(response => response.json())
-            .then(data => {
-                showFormMessage('✅ Đăng ký thành công! Chúng tôi sẽ liên hệ với bạn trong vòng 24 giờ.', 'success');
-                leadForm.reset();
-                submitBtn.textContent = originalBtnText;
-                submitBtn.disabled = false;
+            .then(function(response) {
+                return response.json().then(function(data) {
+                    return { ok: response.ok, status: response.status, data: data };
+                });
             })
-            .catch(error => {
-                console.error('Error:', error);
-                showFormMessage('❌ Có lỗi xảy ra. Vui lòng thử lại sau.', 'error');
+            .then(function(result) {
+                if (result.ok) {
+                    showFormMessage('Đăng ký thành công! Chúng tôi sẽ liên hệ với bạn trong vòng 24 giờ.', 'success');
+                    leadForm.reset();
+
+                    // Track event (Google Analytics)
+                    if (typeof gtag !== 'undefined') {
+                        gtag('event', 'lead_submission', {
+                            'event_category': 'form',
+                            'event_label': 'register_form',
+                            'value': 1
+                        });
+                    }
+
+                    // Track event (Facebook Pixel)
+                    if (typeof fbq !== 'undefined') {
+                        fbq('track', 'Lead');
+                    }
+                } else {
+                    console.error('CRM Error:', result.status, result.data);
+                    showFormMessage('Có lỗi xảy ra. Vui lòng thử lại sau hoặc gọi hotline 0988.97.8886.', 'error');
+                }
+            })
+            .catch(function(error) {
+                console.error('Network Error:', error);
+                showFormMessage('Lỗi kết nối. Vui lòng kiểm tra mạng và thử lại.', 'error');
+            })
+            .finally(function() {
                 submitBtn.textContent = originalBtnText;
                 submitBtn.disabled = false;
             });
-            */
         });
     }
 
